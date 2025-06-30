@@ -4,7 +4,6 @@ import json
 
 app = Flask(__name__)
 
-# === TUS CREDENCIALES DE TIENDANUBE ===
 CLIENT_ID = "19066"
 CLIENT_SECRET = "d0ce627cdede364eb19cb4ba64410c51db41c24661a3efb9"
 REDIRECT_URI = "https://tiendanube-exportador.onrender.com/callback"
