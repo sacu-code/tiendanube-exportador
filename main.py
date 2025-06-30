@@ -15,7 +15,7 @@ client = gspread.authorize(creds)
 sheet = client.open("reporte-ventas-Fibransur_2025").sheet1
 
 # API call
-url = f"https://api.tiendanube.com/v1/{STORE_ID}/orders?per_page=1"
+url = f"https://api.tiendanube.com/v1/{STORE_ID}/orders?per_page=3"
 headers = {
     "Authentication": f"bearer {ACCESS_TOKEN}",
     "Content-Type": "application/json"
@@ -26,6 +26,11 @@ if res.status_code != 200:
     raise Exception(f"Error {res.status_code}: {res.text}")
 
 orders = res.json()
+print(f"Pedidos encontrados: {len(orders)}")
 
-# Mostrar en logs (Render lo va a mostrar en Logs)
-print(json.dumps(orders[0], indent=2, ensure_ascii=False))
+if not orders:
+    print("No hay pedidos.")
+else:
+    for i, order in enumerate(orders):
+        print(f"\n--- Pedido #{i+1} ---")
+        print(json.dumps(order, indent=2, ensure_ascii=False))
