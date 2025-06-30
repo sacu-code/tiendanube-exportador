@@ -18,7 +18,7 @@ client = gspread.authorize(creds)
 sheet = client.open("reporte-ventas-Fibransur_2025").sheet1
 
 # === Llamada a la API de Tiendanube ===
-url = f"https://api.tiendanube.com/v1/{STORE_ID}/orders?per_page=200"
+url = f"https://api.tiendanube.com/v1/{STORE_ID}/orders?per_page=200&sort_by=number&sort_order=asc"
 headers = {
     "Authentication": f"bearer {ACCESS_TOKEN}",
     "Content-Type": "application/json"
