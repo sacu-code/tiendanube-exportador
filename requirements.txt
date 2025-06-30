@@ -1,4 +1,2 @@
-gspread
-oauth2client
-requests
 flask
+requests
