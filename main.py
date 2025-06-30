@@ -1,67 +1,73 @@
+from flask import Flask, request, redirect
 import requests
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
-import os
 import json
-from datetime import datetime
 
-# === CONFIGURACIÓN ===
-ACCESS_TOKEN = os.getenv("TIENDANUBE_TOKEN")
-STORE_ID = os.getenv("TIENDANUBE_USER_ID")
+app = Flask(__name__)
 
-# === Conexión a Google Sheets desde GOOGLE_CREDENTIALS ===
-google_credentials_json = os.getenv("GOOGLE_CREDENTIALS")
-creds_dict = json.loads(google_credentials_json)
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
-client = gspread.authorize(creds)
-sheet = client.open("reporte-ventas-Fibransur_2025").sheet1
+# === TUS CREDENCIALES DE TIENDANUBE ===
+CLIENT_ID = "19066"
+CLIENT_SECRET = "d0ce627cdede364eb19cb4ba64410c51db41c24661a3efb9"
+REDIRECT_URI = "https://tiendanube-exportador.onrender.com/callback"
 
-# === Llamada a la API de Tiendanube ===
-url = f"https://api.tiendanube.com/v1/{STORE_ID}/orders?per_page=200&sort_by=number&sort_order=asc"
-headers = {
-    "Authentication": f"bearer {ACCESS_TOKEN}",
-    "Content-Type": "application/json"
-}
-res = requests.get(url, headers=headers)
-if res.status_code != 200:
-    raise Exception(f"Error {res.status_code}: {res.text}")
+@app.route("/")
+def home():
+    auth_url = (
+        f"https://www.tiendanube.com/apps/authorize"
+        f"?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}"
+        f"&response_type=code&scope=read_orders"
+    )
+    return f'<a href="{auth_url}">Conectar Tiendanube</a>'
 
-orders = res.json()
-orders = sorted(orders, key=lambda o: o.get("number", 0))  # Orden ascendente real
+@app.route("/callback")
+def callback():
+    code = request.args.get("code")
+    if not code:
+        return "Falta el código de autorización"
 
-# === Encabezado ===
-sheet.clear()
-sheet.append_row([
-    "Orden", "Fecha", "Cliente", "DNI", "Medio de pago",
-    "SKU", "Producto", "Precio de producto", "Cantidad",
-    "Descuento", "Envío", "Total"
-])
+    token_url = "https://www.tiendanube.com/apps/token"
+    response = requests.post(token_url, data={
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "grant_type": "authorization_code",
+        "code": code,
+        "redirect_uri": REDIRECT_URI
+    })
 
-# === Procesar cada orden ===
-for order in orders:
+    if response.status_code != 200:
+        return f"Error obteniendo token: {response.text}"
+
+    data = response.json()
+    access_token = data["access_token"]
+    user_id = data["user_id"]
+
+    with open("auth_data.json", "w") as f:
+        json.dump(data, f)
+
+    return f"✅ Autenticado con éxito<br><br>Access Token: {access_token}<br>Store ID: {user_id}<br><br><a href='/ventas'>Ver ventas</a>"
+
+@app.route("/ventas")
+def ventas():
     try:
-        fecha = datetime.strptime(order["created_at"], "%Y-%m-%dT%H:%M:%S%z").strftime("%d/%m")
+        with open("auth_data.json", "r") as f:
+            auth = json.load(f)
     except:
-        fecha = ""
+        return "⚠️ Primero conectá una tienda desde /"
 
-    nro_orden = order.get("number", "")
-    email = order.get("contact_email", "")
-    cliente = order.get("contact_name", "")
-    dni = order.get("contact_identification", "")
-    medio_pago = order.get("gateway_name") or order.get("gateway", "")
-    descuento = f"$ {order.get('promotional_discount', {}).get('total_discount_amount', '0.00')}"
-    envio = f"$ {order.get('shipping_cost_owner', '0.00')}"
-    total = f"$ {order.get('total', '0.00')}"
+    token = auth["access_token"]
+    store_id = auth["user_id"]
 
-    for product in order.get("products", []):
-        nombre = product.get("name", "")
-        sku = product.get("sku", "")
-        precio = f"$ {product.get('price', '0.00')}"
-        cantidad = product.get("quantity", 1)
+    headers = {
+        "Authentication": f"bearer {token}",
+        "User-Agent": f"{store_id} - Exportador Ventas"
+    }
 
-        sheet.append_row([
-            nro_orden, fecha, cliente, dni, medio_pago,
-            sku, nombre, precio, cantidad,
-            descuento, envio, total
-        ]) 
+    r = requests.get(f"https://api.tiendanube.com/v1/{store_id}/orders", headers=headers)
+
+    if r.status_code != 200:
+        return f"Error al obtener ventas: {r.text}"
+
+    ventas = r.json()
+    return json.dumps(ventas, indent=2)
+
+if __name__ == "__main__":
+    app.run(port=8080)
