@@ -1,12 +1,11 @@
-
 import requests
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import os
 
 # CONFIGURACIÓN
-ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
-STORE_ID = 6250679
+ACCESS_TOKEN = os.getenv("TIENDANUBE_TOKEN")  # 🔄 ahora sí usa el nombre correcto
+STORE_ID = os.getenv("TIENDANUBE_USER_ID")    # también cambié esto para usar el entorno
 
 # Conexión a Google Sheets
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -17,7 +16,7 @@ sheet = client.open("reporte-ventas-Fibransur_2025").sheet1
 # Llamada a la API
 url = f"https://api.tiendanube.com/v1/{STORE_ID}/orders?per_page=200"
 headers = {
-    "Authorization": f"Bearer {ACCESS_TOKEN}",
+    "Authentication": f"bearer {ACCESS_TOKEN}",
     "Content-Type": "application/json"
 }
 
