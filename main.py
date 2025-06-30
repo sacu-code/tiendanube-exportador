@@ -48,7 +48,7 @@ for order in orders:
     email = order.get("contact_email", "")
     cliente = order.get("contact_name", "")
     dni = order.get("contact_identification", "")
-    medio_pago = order.get("gateway_name", "")  # NOMBRE legible como “Pago Nube”
+    medio_pago = order.get("gateway_name") or order.get("gateway", "")
     descuento = f"$ {order.get('promotional_discount', {}).get('total_discount_amount', '0.00')}"
     envio = f"$ {order.get('shipping_cost_owner', '0.00')}"
     total = f"$ {order.get('total', '0.00')}"
