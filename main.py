@@ -28,7 +28,7 @@ if res.status_code != 200:
     raise Exception(f"Error {res.status_code}: {res.text}")
 
 orders = res.json()
-orders = sorted(orders, key=lambda o: o.get("number", 0))
+orders = sorted(orders, key=lambda o: o.get("number", 0))  # Orden ascendente real
 
 # === Encabezado ===
 sheet.clear()
