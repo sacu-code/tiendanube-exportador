@@ -4,8 +4,8 @@ from oauth2client.service_account import ServiceAccountCredentials
 import os
 
 # CONFIGURACIÓN
-ACCESS_TOKEN = os.getenv("TIENDANUBE_TOKEN")  # 🔄 ahora sí usa el nombre correcto
-STORE_ID = os.getenv("TIENDANUBE_USER_ID")    # también cambié esto para usar el entorno
+ACCESS_TOKEN = os.getenv("TIENDANUBE_TOKEN")
+STORE_ID = os.getenv("TIENDANUBE_USER_ID")
 
 # Conexión a Google Sheets
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -26,17 +26,31 @@ if res.status_code != 200:
 
 orders = res.json()
 
-# Limpia y carga la hoja
+# Encabezados
 sheet.clear()
-sheet.append_row(["Nro Orden", "Email", "Fecha", "Total", "Producto", "Cantidad"])
+sheet.append_row([
+    "Nro Compra", "Fecha", "Cliente", "DNI", "Email", "Medio de Pago", "SKU",
+    "Producto", "Precio Producto", "Descuento", "Envío", "Total"
+])
 
+# Carga de datos
 for order in orders:
+    order_id = order["id"]
+    fecha = order.get("created_at", "")
+    cliente = order.get("customer", {}).get("name", "")
+    dni = order.get("customer", {}).get("identification", "")
+    email = order.get("contact_email", "")
+    pago = order.get("gateway", "")
+    descuento = order.get("discount_amount", "")
+    envio = order.get("shipping_cost", "")
+    total = order.get("total", "")
+
     for product in order["products"]:
+        sku = product.get("sku", "")
+        nombre_producto = product.get("name", "")
+        precio = product.get("price", "")
+
         sheet.append_row([
-            order["id"],
-            order.get("contact_email", ""),
-            order.get("created_at", ""),
-            order.get("total", ""),
-            product.get("name", ""),
-            product.get("quantity", "")
+            order_id, fecha, cliente, dni, email, pago, sku,
+            nombre_producto, precio, descuento, envio, total
         ])
