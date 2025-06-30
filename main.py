@@ -10,7 +10,7 @@ STORE_ID = 6250679
 
 # Conexión a Google Sheets
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("exportador-tiendanube-867cffd82141.json", scope)
+creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
 client = gspread.authorize(creds)
 sheet = client.open("VENTAS TIENDANUBE").sheet1
 
