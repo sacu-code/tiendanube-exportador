@@ -17,7 +17,7 @@ sheet = client.open("reporte-ventas-Fibransur_2025").sheet1
 # Llamada a la API
 url = f"https://api.tiendanube.com/v1/{STORE_ID}/orders?per_page=200"
 headers = {
-    "Authentication": f"bearer {ACCESS_TOKEN}",
+    "Authorization": f"Bearer {ACCESS_TOKEN}",
     "Content-Type": "application/json"
 }
 
