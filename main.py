@@ -12,7 +12,7 @@ STORE_ID = 6250679
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
 client = gspread.authorize(creds)
-sheet = client.open("VENTAS TIENDANUBE").sheet1
+sheet = client.open("reporte-ventas-Fibransur_2025").sheet1
 
 # Llamada a la API
 url = f"https://api.tiendanube.com/v1/{STORE_ID}/orders?per_page=200"
